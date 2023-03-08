@@ -1,0 +1,60 @@
+@startuml DB_ER_Diagram
+
+
+title "Airlines_DB"
+
+
+entity "Airplanes" as airplanes {
+	*Id: INTEGER <<Autovalue>>
+	--
+	*Capacity: INTEGER
+	--
+	Airplanes_Capacity_Check : <<CHECK>>
+}
+
+entity "Pilots" as pilots {
+	*Id: INTEGER <<Autovalue>>
+	--
+	*FirstName: VARCHAR(30)
+	*LastName: VARCHAR(60)
+	*Phone: VARCHAR(13)
+	*Email: VARCHAR(60)
+	--
+	Pilots_FirstName_Check : <<CHECK>>
+	Pilots_LastName_Check : <<CHECK>>
+	Pilots_Phone_Check : <<CHECK>>
+	Pilots_Email_Check : <<CHECK>>
+}
+
+entity "Airports" as airports {
+	*Id: INTEGER  <<Autovalue>>
+	--
+	*Country: VARCHAR(40)
+	*City: VARCHAR(60)
+	--
+	Airports_Country_Check : <<CHECK>>
+	Airports_City_Check : <<CHECK>>
+}
+
+entity "Planned_Flights" as pl_flights {
+	*Id: INTEGER <<Autovalue>>
+	--
+	*Airplanes_Id : INTEGER <<Foreign Key>>
+	*Airports_Departure_Id : INTEGER <<Foreign Key>>
+	*Airports_Destination_Id : INTEGER <<Foreign Key>>
+}
+
+entity "Planned_Flights_Pilots" as pl_flights_pilots {
+	*Id: INTEGER <<Autovalue>>
+	--
+	*Planned_Flights_Id : INTEGER <<Foreign Key>>
+	*Pilots_Id : INTEGER  <<Foreign Key>>
+}
+
+
+pl_flights }o--|| airplanes
+pl_flights }o--|| airports
+pl_flights_pilots }|--|| pl_flights
+pl_flights_pilots }o--|| pilots
+	
+@enduml
