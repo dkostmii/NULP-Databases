@@ -5,49 +5,130 @@
 Авіакомпанія потребує збереження наступних даних:
 
 - літаки
+
+    - місткість
+        
 - пілотів
+
+    - ім'я
+    - прізвище
+    - номер телефону
+    - адреса електронної пошти
+    - дата народження
+    - дата працевлаштування
+
 - аеропорти
+
+    - країна
+    - місто
+
 - заплановані польоти:
 
+    - дата відправлення
+    - дата прибуття
     - пілоти
     - літак
     - аеропорт відправлення
     - аеропорт призначення
 
+Структура бази даних повинна бути реалізована таким чином
+, аби запобігти введенню потенційно неправильних даних.
+
+Обов'язково потрібно обмежити можливі значення для:
+
+- місткості літака: 3 - 300 сидінь
+- номер телефону: 6 - 16 цифр зі знаком `+`
+
+    За потреби використання маски, у випадку якщо ця маска призводить
+    до запису форматованого номеру у БД, потрібно додати знаки `()` та `-`
+    і скоригувати мінімальну та максимальну довжину цього поля
+
+- адреса електронної пошти - малі латинські літери, знаки `-`, `_`, `@`, з котрих вона не повинна починатись чи закінчуватись
+- проміжок часу між датою народження і працевлаштуванням повинен бути меншим за вік пілота, а вік пілота більшим чи рівним 18 років
+- у назвах країн, міст, іменах та прізвищах лише латинські літери та знак `-`
+- дата відправлення повинна бути раніше, ніж дата прибуття літака
+
+Деякі операції неможливо реалізувати без використання збережених процедур (Stored procedures), котрі відсутні у ПЗ LibreOffice Base, з погляду на його призначення.
+
+Прикладом такої операції є перевірка, чи один і той самий літак не був використаний у зовнішньому ключі таблиці **Planned_Flights** у той же період часу, оскільки це потребує додатково запиту до БД.
+У цій роботі припускаємо, що літак не може відправлятись та прибувати в один і той же час. Для реалізації цього необхідно ствоити два унікальних ключі, список котрих наведено нижче.
+
+Також необхідно зробити деякі поля унікальними, а саме:
+
+- номер телефону
+- адреса електронної пошти
+- ідентифікатор літаку й дата відправлення
+- ідентифікатор літаку й дата прибуття
+- ідентифікатор запланованого польоту та ідентифікатор пілота
+
+    Варто зазначити, що тут також виникає проблема перевірки, чи того самого пілота не було додано до запланованих польотів в інтеравалах часу, що перетинаються, що вимагає використання збережених процедур.
+
 Діаграма сутностей для БД (ER Diagram) виглядає наступним чином:
 
 ![ER Diagram](./DB_ER_Diagram.png)
+
+У випадку, якщо тип на діаграмі недоступний для вибору в інтерфейсі ПЗ LibreOffice Base, потрібно співставити цей тип з таблицею на даному [ресурсі](https://www.libreofficehelp.com/field-data-types-libreoffice-base/).
 
 Код SQL для створення обмежень `CHECK`:
 
 ```SQL
 Airplanes_Capacity_Check CHECK (Capacity > 5 AND Capacity < 300)
 
-Pilots_FirstName_Check CHECK (
-    LEN(FirstName) > 2 AND
-    FirstName NOT LIKE '%[^A-Za-z\-]%' AND
-    FirstName NOT LIKE '\-%' AND
-    FirstName NOT LIKE '%\-'
-    ESCAPE '\')
+Airports_Country_Check CHECK (
+    LEN(Country) > 3 AND
+    Country NOT LIKE '%[^A-Za-z\-]%' AND
+    Country NOT LIKE '\-%' AND
+    Country NOT LIKE '%\-'
+    ESCAPE '\'
+);
 
-Pilots_LastName_Check CHECK (
-    LEN(LastName) > 3 AND
-    LastName NOT LIKE '%[^A-Za-z\-]%' AND
-    LastName NOT LIKE '\-%' AND
-    LastName NOT LIKE '%\-'
-    ESCAPE '\')
+Airports_City_Check CHECK (
+    LEN(City) > 3 AND
+    City NOT LIKE '%[^A-Za-z\-]%' AND
+    City NOT LIKE '\-%' AND
+    City NOT LIKE '%\-'
+    ESCAPE '\'
+);
+
+Pilots_First_Name_Check CHECK (
+    LEN(First_Name) > 2 AND
+    First_Name NOT LIKE '%[^A-Za-z\-]%' AND
+    First_Name NOT LIKE '\-%' AND
+    First_Name NOT LIKE '%\-'
+    ESCAPE '\'
+);
+
+Pilots_Last_Name_Check CHECK (
+    LEN(Last_Name) > 3 AND
+    Last_Name NOT LIKE '%[^A-Za-z\-]%' AND
+    Last_Name NOT LIKE '\-%' AND
+    Last_Name NOT LIKE '%\-'
+    ESCAPE '\'
+);
 
 Pilots_Phone_Check CHECK (
-    LEN(Phone) > 9 AND
+    LEN(Phone) > 6 AND
     Phone NOT LIKE '%[^0-9\+]' AND
     Phone LIKE '\+%' AND
     Phone NOT LIKE '%[0-9]\+%'
-    ESCAPE '\')
+    ESCAPE '\'
+);
 
 Pilots_Email_Check CHECK (
     LEN(Email) > 3 AND
     Email LIKE '%_@__%.__%' AND
-    Email NOT LIKE '[^a-z\_\-.]'
-    ESCAPE '\')
-```
+    Email NOT LIKE '[^a-z\_\-@.]'
+    ESCAPE '\'
+);
 
+Pilots_Birth_Date_Employment_Date_Check CHECK (
+    Birth_Date < Employment_Date AND
+    DATEDIFF(YEAR, Birth_Date, Employment_Date) <= DATEDIFF(YEAR, Birth_Date, GETDATE()) AND
+    DATEDIFF(YEAR, Birth_Date, GETDATE()) >= 18
+);
+
+Planned_Flights_Departure_At_Arrival_At_Check CHECK (
+    Departure_At < Arrival_At AND
+    Departure_At >= GETDATE()
+)
+```

@@ -5,50 +5,65 @@ title "Airlines_DB"
 
 
 entity "Airplanes" as airplanes {
-	*Id: INTEGER <<Autovalue>>
+	*Id : INTEGER <<IDENTITY>>
 	--
-	*Capacity: INTEGER
+	*Capacity : INTEGER
 	--
 	Airplanes_Capacity_Check : <<CHECK>>
 }
 
 entity "Pilots" as pilots {
-	*Id: INTEGER <<Autovalue>>
+	*Id: INTEGER <<IDENTITY>>
 	--
-	*FirstName: VARCHAR(30)
-	*LastName: VARCHAR(60)
-	*Phone: VARCHAR(13)
-	*Email: VARCHAR(60)
+	*First_Name : VARCHAR(30)
+	*Last_Name : VARCHAR(60)
+	*Phone : VARCHAR(16)
+	*Email : VARCHAR(60)
+	*Birth_Date : DATETIME
+	*Employment_Date : DATETIME
 	--
-	Pilots_FirstName_Check : <<CHECK>>
-	Pilots_LastName_Check : <<CHECK>>
+	Pilots_First_Name_Check : <<CHECK>>
+	Pilots_Last_Name_Check : <<CHECK>>
 	Pilots_Phone_Check : <<CHECK>>
 	Pilots_Email_Check : <<CHECK>>
+	Pilots_Birth_Date_Employment_Date_Check : <<CHECK>>
+	..
+	Pilots_Phone_AK : <<AK>>
+	Pilots_Email_AK : <<AK>>
 }
 
 entity "Airports" as airports {
-	*Id: INTEGER  <<Autovalue>>
+	*Id : INTEGER  <<IDENTITY>>
 	--
-	*Country: VARCHAR(40)
-	*City: VARCHAR(60)
+	*Country : VARCHAR(40)
+	*City : VARCHAR(60)
 	--
 	Airports_Country_Check : <<CHECK>>
 	Airports_City_Check : <<CHECK>>
 }
 
 entity "Planned_Flights" as pl_flights {
-	*Id: INTEGER <<Autovalue>>
+	*Id: INTEGER <<IDENTITY>>
 	--
-	*Airplanes_Id : INTEGER <<Foreign Key>>
-	*Airports_Departure_Id : INTEGER <<Foreign Key>>
-	*Airports_Destination_Id : INTEGER <<Foreign Key>>
+	*Departure_At : DATETIME
+	*Arrival_At : DATETIME
+	*Airplanes_Id : INTEGER <<FK>>
+	*Airports_Departure_Id : INTEGER <<FK>>
+	*Airports_Destination_Id : INTEGER <<FK>>
+	--
+	Planned_Flights_Departure_At_Arrival_At_Check : <<CHECK>>
+	..
+	Planned_Flights_Airplanes_Id_Departure_At_AK : <<AK>>
+	Planned_Flights_Airplanes_Id_Arrival_At_AK : <<AK>>
 }
 
 entity "Planned_Flights_Pilots" as pl_flights_pilots {
-	*Id: INTEGER <<Autovalue>>
+	*Id : INTEGER <<IDENTITY>>
 	--
-	*Planned_Flights_Id : INTEGER <<Foreign Key>>
-	*Pilots_Id : INTEGER  <<Foreign Key>>
+	*Planned_Flights_Id : INTEGER <<FK>>
+	*Pilots_Id : INTEGER  <<FK>>
+	--
+	Planned_Flights_Pilots_Planned_Flights_Id_Pilots_Id_AK : <<AK>>
 }
 
 
