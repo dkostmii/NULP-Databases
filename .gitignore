@@ -1,4 +1,7 @@
 *.odb
+*.odt
 *.html
 *.jar
+*.odb.lck
+*.pdf
 

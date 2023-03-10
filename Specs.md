@@ -6,30 +6,30 @@
 
 - літаки
 
-    - місткість
-        
+  - місткість
+
 - пілотів
 
-    - ім'я
-    - прізвище
-    - номер телефону
-    - адреса електронної пошти
-    - дата народження
-    - дата працевлаштування
+  - ім'я
+  - прізвище
+  - номер телефону
+  - адреса електронної пошти
+  - дата народження
+  - дата працевлаштування
 
 - аеропорти
 
-    - країна
-    - місто
+  - країна
+  - місто
 
 - заплановані польоти:
 
-    - дата відправлення
-    - дата прибуття
-    - пілоти
-    - літак
-    - аеропорт відправлення
-    - аеропорт призначення
+  - дата відправлення
+  - дата прибуття
+  - пілоти
+  - літак
+  - аеропорт відправлення
+  - аеропорт призначення
 
 Структура бази даних повинна бути реалізована таким чином
 , аби запобігти введенню потенційно неправильних даних.
@@ -38,20 +38,35 @@
 
 - місткості літака: 3 - 300 сидінь
 - номер телефону: 6 - 16 цифр зі знаком `+`
+- адреса електронної пошти - малі латинські літери, знаки `-`, `_`, `@`
+  , з котрих вона не повинна починатись чи закінчуватись.
 
-    За потреби використання маски, у випадку якщо ця маска призводить
-    до запису форматованого номеру у БД, потрібно додати знаки `()` та `-`
-    і скоригувати мінімальну та максимальну довжину цього поля
-
-- адреса електронної пошти - малі латинські літери, знаки `-`, `_`, `@`, з котрих вона не повинна починатись чи закінчуватись
-- проміжок часу між датою народження і працевлаштуванням повинен бути меншим за вік пілота, а вік пілота більшим чи рівним 18 років
+- проміжок часу між датою народження і працевлаштуванням повинен
+  бути меншим за вік пілота, а вік пілота більшим чи рівним 18 років
 - у назвах країн, міст, іменах та прізвищах лише латинські літери та знак `-`
+  . Вони не повинні закінчуватись чи починатись цим знаком
+  . Мінімальна довжина 1 або 2 символи, в залежності від поля.
+  
+  З погляду на складність імплементації перевірки знаків у вбудованій БД HSQLDB
+  , а саме неможливість використання виразів `LIKE` на кшталт `LIKE '%[A-Za-z\-]%'`
+  , перевірка відбувається лише по ознаці `LOWER("поле") != UPPER("поле")`.
+  Це означає, що `"поле"` повинно містити принаймні одну літеру.
+
 - дата відправлення повинна бути раніше, ніж дата прибуття літака
 
-Деякі операції неможливо реалізувати без використання збережених процедур (Stored procedures), котрі відсутні у ПЗ LibreOffice Base, з погляду на його призначення.
+З погляду на нерелевантність створення збережених процедур (Stored procedures)
+у даній практичній роботі, а також складність імплементації таких процедур
+у вбудованій у ПЗ LibreOffice Base СУБД HSQLDB
+, припускається лише перевірка унікальності полей таблиці.
 
-Прикладом такої операції є перевірка, чи один і той самий літак не був використаний у зовнішньому ключі таблиці **Planned_Flights** у той же період часу, оскільки це потребує додатково запиту до БД.
-У цій роботі припускаємо, що літак не може відправлятись та прибувати в один і той же час. Для реалізації цього необхідно ствоити два унікальних ключі, список котрих наведено нижче.
+Наприклад, у ідеальному випадку потрібно перевіряти, чи один і той самий літак
+не був використаний у зовнішньому ключі таблиці **Planned_Flights**
+у той же період часу, оскільки це потребує додатково запиту до БД.
+
+У цій роботі припускаємо, що літак не може відправлятись та прибувати
+в один і той же час.
+Для реалізації цього необхідно створити два унікальних ключі
+, список котрих наведено нижче.
 
 Також необхідно зробити деякі поля унікальними, а саме:
 
@@ -61,74 +76,202 @@
 - ідентифікатор літаку й дата прибуття
 - ідентифікатор запланованого польоту та ідентифікатор пілота
 
-    Варто зазначити, що тут також виникає проблема перевірки, чи того самого пілота не було додано до запланованих польотів в інтеравалах часу, що перетинаються, що вимагає використання збережених процедур.
+  Варто зазначити, що тут також виникає проблема перевірки
+  , чи того самого пілота не було додано до запланованих польотів
+  в інтеравалах часу, що перетинаються
+  , оскільки це вимагає використання збережених процедур.
+
+Детальну документацію з вбудованої бази даних в ПЗ LibreOffice Base HSQLDB 1.8
+можна переглянути [тут](http://www.hsqldb.org/doc/1.8/guide/index.html)
+
+## Діаграма сутностей (ER Diagram)
 
 Діаграма сутностей для БД (ER Diagram) виглядає наступним чином:
 
 ![ER Diagram](./DB_ER_Diagram.png)
 
-У випадку, якщо тип на діаграмі недоступний для вибору в інтерфейсі ПЗ LibreOffice Base, потрібно співставити цей тип з таблицею на даному [ресурсі](https://www.libreofficehelp.com/field-data-types-libreoffice-base/).
+Задля компактності вигляду діаграми, визначення обмежень
+`CHECK` подано нижче у вигляді коду SQL.
 
-Код SQL для створення обмежень `CHECK`:
+У випадку, якщо тип на діаграмі недоступний для вибору в інтерфейсі
+ПЗ LibreOffice Base, потрібно співставити цей тип з таблицею
+на даному [ресурсі](https://www.libreofficehelp.com/field-data-types-libreoffice-base/).
+
+## Створення бази даних
+
+Створення бази даних відбуватиметься за допомогою прямих
+запитів SQL до вбудованої у ПЗ LibreOffice СУБД HSQLDB.
+
+Код SQL для створення усіх таблиць бази даних:
 
 ```SQL
-Airplanes_Capacity_Check CHECK (Capacity > 5 AND Capacity < 300)
+DROP TABLE "Planned_Flights_Pilots" IF EXISTS;
+DROP TABLE "Planned_Flights" IF EXISTS;
+DROP TABLE "Pilots" IF EXISTS;
+DROP TABLE "Airports" IF EXISTS;
+DROP TABLE "Airplanes" IF EXISTS;
 
-Airports_Country_Check CHECK (
-    LEN(Country) > 3 AND
-    Country NOT LIKE '%[^A-Za-z\-]%' AND
-    Country NOT LIKE '\-%' AND
-    Country NOT LIKE '%\-'
-    ESCAPE '\'
+CREATE TABLE "Airplanes" (
+    "Id" INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    "Capacity" INTEGER NOT NULL,
+    CONSTRAINT "Airplanes_Capacity_Check" CHECK ("Capacity" > 5 AND "Capacity" < 300)
 );
 
-Airports_City_Check CHECK (
-    LEN(City) > 3 AND
-    City NOT LIKE '%[^A-Za-z\-]%' AND
-    City NOT LIKE '\-%' AND
-    City NOT LIKE '%\-'
-    ESCAPE '\'
+CREATE TABLE "Airports" (
+    "Id" INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    "Country" VARCHAR(40) NOT NULL,
+    "City" VARCHAR(60) NOT NULL,
+    CONSTRAINT "Airports_Country_Check" CHECK (
+        CHAR_LENGTH("Country") > 1 AND
+        LOWER("Country") != UPPER("Country") AND
+        "Country" NOT LIKE '-%' AND
+        "Country" NOT LIKE '%-'
+    ),
+    CONSTRAINT "Airports_City_Check" CHECK (
+        CHAR_LENGTH("City") > 2 AND
+        LOWER("City") != UPPER("City") AND
+        "City" NOT LIKE '-%' AND
+        "City" NOT LIKE '%-'
+    )
 );
 
-Pilots_First_Name_Check CHECK (
-    LEN(First_Name) > 2 AND
-    First_Name NOT LIKE '%[^A-Za-z\-]%' AND
-    First_Name NOT LIKE '\-%' AND
-    First_Name NOT LIKE '%\-'
-    ESCAPE '\'
+CREATE TABLE "Pilots" (
+    "Id" INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    "First_Name" VARCHAR(30) NOT NULL,
+    "Last_Name" VARCHAR(60) NOT NULL,
+    "Phone" VARCHAR(16) NOT NULL,
+    "Email" VARCHAR(60) NOT NULL,
+    "Birth_Date" DATE NOT NULL,
+    "Employment_Date" DATE NOT NULL,
+    CONSTRAINT "Pilots_First_Name_Check" CHECK (
+        CHAR_LENGTH("First_Name") > 1 AND
+        LOWER("First_Name") != UPPER("First_Name") AND
+        "First_Name" NOT LIKE '-%' AND
+        "First_Name" NOT LIKE '%-'
+    ),
+    CONSTRAINT "Pilots_Last_Name_Check" CHECK (
+        CHAR_LENGTH("Last_Name") > 1 AND
+        LOWER("Last_Name") != UPPER("Last_Name") AND
+        "Last_Name" NOT LIKE '-%' AND
+        "Last_Name" NOT LIKE '%-'
+    ),
+    CONSTRAINT "Pilots_Phone_Check" CHECK (
+        LENGTH("Phone") > 6 AND
+        LOWER("Phone") = UPPER("Phone")
+    ),
+    CONSTRAINT "Pilots_Email_Check" CHECK (
+        CHAR_LENGTH("Email") > 3 AND
+        LOWER("Email") = "Email"
+    ),
+    CONSTRAINT "Pilots_Birth_Date_Employment_Date_Check" CHECK (
+        "Birth_Date" < "Employment_Date" AND
+        DATEDIFF('year', "Birth_Date", "Employment_Date") <= DATEDIFF('year', "Birth_Date", CURRENT_DATE) AND
+        DATEDIFF('year', "Birth_Date", CURRENT_DATE) >= 18
+    )
 );
 
-Pilots_Last_Name_Check CHECK (
-    LEN(Last_Name) > 3 AND
-    Last_Name NOT LIKE '%[^A-Za-z\-]%' AND
-    Last_Name NOT LIKE '\-%' AND
-    Last_Name NOT LIKE '%\-'
-    ESCAPE '\'
+CREATE TABLE "Planned_Flights" (
+    "Id" INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    "Departure_At" DATETIME NOT NULL,
+    "Arrival_At" DATETIME NOT NULL,
+    "Airplanes_Id" INTEGER NOT NULL,
+    "Airports_Departure_Id" INTEGER NOT NULL,
+    "Airports_Destination_Id" INTEGER NOT NULL,
+    CONSTRAINT "Planned_Flights_Departure_At_Arrival_At_Check" CHECK (
+        "Departure_At" < "Arrival_At" AND
+        "Departure_At" >= CURRENT_DATE
+    ),
+    CONSTRAINT "Planned_Flights_Airplanes_Id_Departure_At_AK" UNIQUE ("Airplanes_Id", "Departure_At"),
+    CONSTRAINT "Planned_Flights_Airplanes_Id_Arrival_At_AK" UNIQUE ("Airplanes_Id", "Arrival_At"),
+    CONSTRAINT "Planned_Flights_Airplanes_FK" FOREIGN KEY ("Airplanes_Id")
+        REFERENCES "Airplanes" ("Id"),
+
+    CONSTRAINT "Planned_Flights_Airports_Departure_FK" FOREIGN KEY ("Airports_Departure_Id")
+        REFERENCES "Airports" ("Id"),
+
+    CONSTRAINT "Planned_Flights_Airports_Destination_FK" FOREIGN KEY ("Airports_Destination_Id")
+        REFERENCES "Airports" ("Id")
 );
 
-Pilots_Phone_Check CHECK (
-    LEN(Phone) > 6 AND
-    Phone NOT LIKE '%[^0-9\+]' AND
-    Phone LIKE '\+%' AND
-    Phone NOT LIKE '%[0-9]\+%'
-    ESCAPE '\'
-);
+CREATE TABLE "Planned_Flights_Pilots" (
+    "Id" INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    "Planned_Flights_Id" INTEGER NOT NULL,
+    "Pilots_Id" INTEGER NOT NULL,
+    CONSTRAINT "Planned_Flights_Pilots_Planned_Flights_Id_Pilots_Id_AK" UNIQUE ("Planned_Flights_Id", "Pilots_Id"),
+    CONSTRAINT "Planned_Flights_Pilots_Planned_Flights_FK" FOREIGN KEY ("Planned_Flights_Id")
+        REFERENCES "Planned_Flights" ("Id"),
 
-Pilots_Email_Check CHECK (
-    LEN(Email) > 3 AND
-    Email LIKE '%_@__%.__%' AND
-    Email NOT LIKE '[^a-z\_\-@.]'
-    ESCAPE '\'
+    CONSTRAINT "Planned_Flights_Pilots_Pilots_FK" FOREIGN KEY ("Pilots_Id")
+        REFERENCES "Pilots" ("Id")
 );
-
-Pilots_Birth_Date_Employment_Date_Check CHECK (
-    Birth_Date < Employment_Date AND
-    DATEDIFF(YEAR, Birth_Date, Employment_Date) <= DATEDIFF(YEAR, Birth_Date, GETDATE()) AND
-    DATEDIFF(YEAR, Birth_Date, GETDATE()) >= 18
-);
-
-Planned_Flights_Departure_At_Arrival_At_Check CHECK (
-    Departure_At < Arrival_At AND
-    Departure_At >= GETDATE()
-)
 ```
+
+
+Код SQL для заповнення усіх таблиць бази даних:
+
+```SQL
+DELETE FROM "Planned_Flights_Pilots";
+DELETE FROM "Planned_Flights";
+DELETE FROM "Pilots";
+DELETE FROM "Airports";
+DELETE FROM "Airplanes";
+
+INSERT INTO "Airplanes" ("Capacity")
+VALUES (75);
+
+INSERT INTO "Airplanes" ("Capacity")
+VALUES (130);
+
+INSERT INTO "Airplanes" ("Capacity")
+VALUES (100);
+
+INSERT INTO "Airplanes" ("Capacity")
+VALUES (80);
+
+INSERT INTO "Airplanes" ("Capacity")
+VALUES (60);
+
+INSERT INTO "Airplanes" ("Capacity")
+VALUES (70);
+
+INSERT INTO "Airports" ("Country", "City")
+VALUES ('Poland', 'Warsaw');
+
+INSERT INTO "Airports" ("Country", "City")
+VALUES ('France', 'Paris');
+
+INSERT INTO "Airports" ("Country", "City")
+VALUES ('UK', 'London');
+
+INSERT INTO "Airports" ("Country", "City")
+VALUES ('USA', 'New York');
+
+INSERT INTO "Airports" ("Country", "City")
+VALUES ('Canada', 'Ottawa');
+
+INSERT INTO "Pilots" ("First_Name", "Last_Name", "Phone", "Email", "Birth_Date", "Employment_Date")
+VALUES ('Grzegorz', 'Brzęczyszczykiewicz', '+48888888888', 'g.brzeczyszczykiewicz@gmail.com', '1960-01-01', '2021-01-01');
+
+INSERT INTO "Pilots" ("First_Name", "Last_Name", "Phone", "Email", "Birth_Date", "Employment_Date")
+VALUES ('Alice', 'Boob', '+1234567890', 'alice.and.bob@yahoo.com', '1995-01-01', '2019-01-01');
+
+INSERT INTO "Planned_Flights" ("Departure_At", "Arrival_At", "Airplanes_Id", "Airports_Departure_Id", "Airports_Destination_Id")
+VALUES ('2023-03-22 22:00:00', '2023-03-23 01:15:00', 0, 0, 1);
+
+INSERT INTO "Planned_Flights" ("Departure_At", "Arrival_At", "Airplanes_Id", "Airports_Departure_Id", "Airports_Destination_Id")
+VALUES ('2023-03-23 23:00:00', '2023-03-24 01:30:00', 0, 2, 1);
+
+INSERT INTO "Planned_Flights_Pilots" ("Planned_Flights_Id", "Pilots_Id")
+VALUES (0, 0);
+
+INSERT INTO "Planned_Flights_Pilots" ("Planned_Flights_Id", "Pilots_Id")
+VALUES (0, 1);
+
+INSERT INTO "Planned_Flights_Pilots" ("Planned_Flights_Id", "Pilots_Id")
+VALUES (1, 1);
+
+INSERT INTO "Planned_Flights_Pilots" ("Planned_Flights_Id", "Pilots_Id")
+VALUES (1, 0);
+
+```
+

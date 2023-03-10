@@ -19,8 +19,8 @@ entity "Pilots" as pilots {
 	*Last_Name : VARCHAR(60)
 	*Phone : VARCHAR(16)
 	*Email : VARCHAR(60)
-	*Birth_Date : DATETIME
-	*Employment_Date : DATETIME
+	*Birth_Date : DATE
+	*Employment_Date : DATE
 	--
 	Pilots_First_Name_Check : <<CHECK>>
 	Pilots_Last_Name_Check : <<CHECK>>
@@ -55,6 +55,9 @@ entity "Planned_Flights" as pl_flights {
 	..
 	Planned_Flights_Airplanes_Id_Departure_At_AK : <<AK>>
 	Planned_Flights_Airplanes_Id_Arrival_At_AK : <<AK>>
+    Planned_Flights_Airplanes_FK : <<FK>>
+    Planned_Flights_Airports_Departure_FK : <<FK>>
+    Planned_Flights_Airports_Destination_FK : <<FK>>
 }
 
 entity "Planned_Flights_Pilots" as pl_flights_pilots {
@@ -64,6 +67,8 @@ entity "Planned_Flights_Pilots" as pl_flights_pilots {
 	*Pilots_Id : INTEGER  <<FK>>
 	--
 	Planned_Flights_Pilots_Planned_Flights_Id_Pilots_Id_AK : <<AK>>
+    Planned_Flights_Pilots_Planned_Flights_FK : <<FK>>
+    Planned_Flights_Pilots_Pilots_FK : <<FK>>
 }
 
 
